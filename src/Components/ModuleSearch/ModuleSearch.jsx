@@ -290,7 +290,7 @@ export default function ModuleSearch() {
                               <div
                                 style={{
                                   marginTop: 2,
-                                  color: "#0d9488",
+                                  color: "#0e7490",
                                   fontSize: 13,
                                 }}
                               >
@@ -299,7 +299,7 @@ export default function ModuleSearch() {
                             </div>
                             <div
                               style={{
-                                color: "#0d9488",
+                                color: "#0e7490",
                                 fontSize: 13,
                                 fontWeight: 600,
                                 whiteSpace: "nowrap",

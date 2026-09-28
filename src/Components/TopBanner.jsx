@@ -26,7 +26,7 @@ const BannerButton = ({ onClick, children, style = {} }) => {
       onFocus={() => setIsHovered(true)}
       onBlur={() => setIsHovered(false)}
       style={{
-        background: isHovered || isActive ? "#0d9489" : "transparent",
+        background: isHovered || isActive ? "#0e7490" : "transparent",
         border: "none",
         color: "#555",
         cursor: "pointer",
@@ -133,9 +133,9 @@ const TopBanner = ({
           flex: 1,
         }}
       >
-        <InfoCircleOutlined style={{ color: "#203624", fontSize: "14px" }} />
-        <span style={{ color: "#203624", fontWeight: 600 }}>Information</span>
-        <span style={{ color: "#4a5a3a", margin: "0 4px" }}>|</span>
+        <InfoCircleOutlined style={{ color: "#1c3440", fontSize: "14px" }} />
+        <span style={{ color: "#1c3440", fontWeight: 600 }}>Information</span>
+        <span style={{ color: "#3d5260", margin: "0 4px" }}>|</span>
         <span style={{ color: "#12120E" }}>{messages[currentIndex]}</span>
       </div>
 

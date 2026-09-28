@@ -86,7 +86,7 @@ const StyledPagination = styled(Pagination)(({ theme }) => ({
       transform: "scale(1.05)",
     },
     "&.Mui-selected": {
-      backgroundColor: "#0f766e",
+      backgroundColor: "#155e75",
       color: theme.palette.primary.contrastText,
       boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
       "&:hover": {
