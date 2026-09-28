@@ -96,7 +96,7 @@ const SignUp = () => {
               }}
               level={4}
             >
-              Sign Up to get started
+              Sign Up for  B34 Alwar
             </Title>
             <Form name="signup" layout="vertical" autoComplete="off" form={signUp}>
               <Form.Item

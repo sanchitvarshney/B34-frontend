@@ -45,7 +45,7 @@ const AppHeader = (props) => {
   const notificationButtonRef = useRef(null);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-10 h-[45px] w-full flex items-center bg-[var(--ant-layout-header-background,#1e293b)]">
+    <div className="fixed top-0 left-0 right-0 z-10 h-[45px] w-full flex items-center bg-[var(--ant-layout-header-background,#16494F)]">
       <div className="w-full pr-[26px]">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-[24px]">
