@@ -1,0 +1,98 @@
+import  { useState } from "react";
+import { Col, Input, Modal, Row } from "antd";
+import { useToast } from "../../../hooks/useToast.js";
+import { imsAxios } from "../../../axiosInterceptor";
+import Field from "../../../Components/Field.jsx";
+
+function CloseModal({ closeModalOpen, setCloseModalOpen, getRows }) {
+  const { showToast } = useToast();
+  const [remark, setRemark] = useState("");
+  const [isValid, setIsValid] = useState(false);
+  const { row } = closeModalOpen;
+  // console.log(row);
+
+  const generateFun = async () => {
+    if (!remark) {
+      setIsValid(true);
+      return;
+    }
+    setIsValid(false);
+
+    const response = await imsAxios.post("/jobwork/closePO", {
+      skucode: row.skuKey,
+      transaction: row.jwId,
+      remark: remark,
+    });
+    setCloseModalOpen(false);
+    if (response.success) {
+      setRemark("");
+
+      getRows();
+    } else if (!response.success) {
+      showToast(response.message?.msg || response.message, "error");
+    }
+  };
+  const handleCancel = () => {
+    setCloseModalOpen(false);
+    setIsValid(false);
+  };
+
+  return (
+    <form>
+      <Modal
+        title="are you sure you want to close the Jobwork Purchase Order ?"
+        centered
+        open={closeModalOpen}
+        onOk={() => {
+          generateFun();
+        }}
+        onCancel={handleCancel}
+        width={800}
+      >
+        <Row>
+          <Col span={24}>
+            Once the Purchase Order will closed, users will not able to proceed
+            further action against to this same purchase order{" "}
+            <span style={{ fontWeight: "bolder", color: "blue" }}>
+              {row?.jwid}{" "}
+            </span>
+            and product SKU.
+          </Col>
+          <Col span={24} style={{ marginTop: "10px" }}>
+            {`Note: "CLOSE" action is an reversible action..`}
+          </Col>
+          <Col
+            span={24}
+            style={{
+              marginTop: "10px",
+              fontSize: "12px",
+              fontWeight: "bolder",
+            }}
+          >
+            type any remark in the field below for cancel PO
+            <span style={{ fontWeight: "bolder", color: "blue" }}>
+              {" "}
+              #{row?.jwid}
+            </span>{" "}
+            (*mandatory)
+          </Col>
+          <Col span={24} style={{ marginTop: "10px" }}>
+            <Field
+              attr="required | Remark is mandatory"
+              value={remark}
+              showValidation={isValid}
+            >
+              <Input
+                placeholder="Remark"
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+            </Field>
+          </Col>
+        </Row>
+      </Modal>
+    </form>
+  );
+}
+
+export default CloseModal;

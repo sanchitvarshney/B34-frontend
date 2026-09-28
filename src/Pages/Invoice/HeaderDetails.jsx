@@ -1,0 +1,534 @@
+import { useState, useEffect } from "react";
+import { Col, Descriptions, Input, Row, Form, Divider, Switch } from "antd";
+import MySelect from "../../Components/MySelect";
+import MyAsyncSelect from "../../Components/MyAsyncSelect";
+import { imsAxios } from "../../axiosInterceptor";
+import SingleDatePicker from "../../Components/SingleDatePicker";
+import Field from "../../Components/Field.jsx";
+
+const HeaderDetails = ({ form, setTcsOptions, setLoading, isValid }) => {
+  const [asyncOptions, setAsyncOptions] = useState([]);
+  const [selectLoading, setSelectLoading] = useState(false);
+  const [locationArr, setLocationArr] = useState([]);
+  const [toggleCheck, setToggleCheck] = useState(false);
+  const [stateOptions, setStateOptions] = useState([]);
+
+  const client = Form.useWatch("client", form);
+  const location = Form.useWatch("location", form);
+  const billingState = Form.useWatch("billingState", {
+    form: form,
+    preserve: true,
+  });
+
+  const handleToggleCheck = (value) => {
+    if (client) {
+      setToggleCheck(value);
+      if (value) {
+        copyAddress();
+      } else {
+        resetAddress();
+      }
+    }
+  };
+  const getStateOptions = async () => {
+    try {
+      setLoading("fetching");
+      const response = await imsAxios.get("/tally/backend/states");
+      const { data } = response;
+      if (data) {
+        const arr = response.data.map((row) => ({
+          text: row.name,
+          value: row.code.toString(),
+        }));
+        setStateOptions(arr);
+      }
+    } catch (error) {
+      console.log("there was some error in fetching state", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const getClientOptions = async (search) => {
+    setSelectLoading(true);
+    const response = await imsAxios.get(`/client/getClient?name=${search}`);
+    setSelectLoading(false);
+    let arr = [];
+    arr = response?.data?.map((d) => {
+      return { text: d.name, value: d.code };
+    });
+    setAsyncOptions(arr);
+    if (!response.success) {
+      setAsyncOptions(arr);
+    }
+  };
+  const copyAddress = () => {
+    const billingValues = form.getFieldsValue([
+      "billingState",
+      "billingCity",
+      "billingName",
+      "billingPin",
+      "billingGst",
+      "billingPan",
+      "billingAddress",
+      "billingEmail",
+    ]);
+
+    form.setFieldValue("shippingName", billingValues.billingName);
+    form.setFieldValue("shippingState", billingValues?.billingState);
+    form.setFieldValue("shippingCity", billingValues.billingCity);
+    form.setFieldValue("shippingPin", billingValues.billingGst);
+    form.setFieldValue("shippingGst", billingValues.billingPin);
+    form.setFieldValue("shippingAddress", billingValues.billingAddress);
+    form.setFieldValue("shippingPan", billingValues.billingPan);
+  };
+  const getFunctionClientName = async () => {
+    const response = await imsAxios.get(
+      `/client/getClient?code=${client.value}`
+    );
+    form.setFieldValue("billingEmail", response.data[0].email);
+  };
+  const getBranchDetails = async (locationId) => {
+    try {
+      setLoading("fetching");
+      const response = await imsAxios.get(
+        `/client/getClientDetail?addressID=${locationId}`
+      );
+      form.setFieldValue("billingState", {
+        label: response?.data[0].state.name,
+        value: response?.data[0].state.code,
+      });
+      form.setFieldValue("billingCity", response?.data[0].city);
+      form.setFieldValue("billingName",  response?.data[0].name);
+      form.setFieldValue("billingPin",  response?.data[0].pinCode);
+      form.setFieldValue("billingGst", response?.data[0].gst);
+      form.setFieldValue("billingPan", response?.data[0].panNo);
+      form.setFieldValue("billingMobile", response?.data[0].phoneNo);
+      form.setFieldValue("billingAddress", response?.data[0].address);
+
+      if (response.success) {
+        const arr = response?.data;
+        setTcsOptions(
+          arr[0].tcsOption.map((row) => ({
+            text: row.tcs_name,
+            value: row.tcs_key,
+            tcsGl: row.tcs_gl_code,
+            tcsGlName: row.ladger_name,
+            tcsPercentage: row.tcs_percent,
+          }))
+        );
+      }
+    } catch (error) {
+      console.log("error in getting location details", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const getLocation = async (clientId) => {
+    try {
+      setLoading("fetching");
+      const response = await imsAxios.get(
+        `/client/branches?clientCode=${clientId}`
+      );
+      let arr = response.data.map((row) => ({
+        text: row.city.name,
+        value: row.city.id,
+      }));
+      form.setFieldValue("location", arr[0]);
+      setLocationArr(arr);
+    } catch (error) {
+      console.log("error in getting client location", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetAddress = () => {
+    form.setFieldValue("shippingName", "");
+    form.setFieldValue("shippingState", "");
+    form.setFieldValue("shippingCity", "");
+    form.setFieldValue("shippingPin", "");
+    form.setFieldValue("shippingGst", "");
+    form.setFieldValue("shippingPan", "");
+    form.setFieldValue("shippingAddress", "");
+  };
+  useEffect(() => {
+    if (client) {
+      getLocation(client.value);
+      getFunctionClientName(client.value);
+    }
+  }, [client]);
+  useEffect(() => {
+    if (location?.value && client?.value) {
+      getBranchDetails(location.value);
+    }
+  }, [location]);
+  useEffect(() => {
+    if (billingState && toggleCheck) {
+      copyAddress();
+    }
+  }, [billingState]);
+  useEffect(() => {
+    getStateOptions();
+  }, []);
+  return (
+    <div
+      style={{
+        height: "100%",
+        overflowY: "scroll",
+        overflowX: "hidden",
+    
+      }}
+    >
+      <Row gutter={12}>
+        <Col span={4}>
+          <Descriptions size="small" title="Client Details">
+            <Descriptions.Item
+              contentStyle={{
+                fontSize: window.innerWidth < 1600 && "0.7rem",
+              }}
+            >
+              Provide Client Details
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+        <Col span={20}>
+          <Row gutter={16}>
+            <Col span={5}>
+              <Form.Item name="client" label="Client" rules={rules.client}>
+                <MyAsyncSelect
+                  selectLoading={selectLoading}
+                  loadOptions={getClientOptions}
+                  onBlur={() => setAsyncOptions([])}
+                  optionsState={asyncOptions}
+                  labelInValue
+                  showError={isValid}
+                  message="Please select a Client"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={5}>
+              <Form.Item
+                label="Location"
+                name="location"
+                rules={rules.location}
+              >
+                <MySelect
+                  options={locationArr}
+                  placeholder="Select Location"
+                  labelInValue
+                  showError={isValid}
+                  message="Please select a Location"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item
+                label="City"
+                name="billingCity"
+                rules={rules.billingCity}
+              >
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col span={5}>
+              <Form.Item
+                label="Email"
+                name="billingEmail"
+                rules={rules.billingEmail}
+              >
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item
+                label="Mobile"
+                name="billingMobile"
+                rules={rules.billingMobile}
+              >
+                <Input disabled />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={4}>
+              <Form.Item
+                label="GSTIN"
+                name="billingGst"
+                rules={rules.billingGst}
+              >
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item
+                label="Address"
+                name="billingAddress"
+                rules={rules.billingAddress}
+              >
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item label="PAN" name="billingPan" rules={rules.billingPan}>
+                <Input disabled />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+      <Divider />
+      <Row gutter={12}>
+        <Col span={4}>
+          <Descriptions size="small" title="Transport Details">
+            <Descriptions.Item
+              contentStyle={{
+                fontSize: window.innerWidth < 1600 && "0.7rem",
+              }}
+            >
+              Provide Transport Details
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+
+        <Col span={20}>
+          <Row gutter={16}>
+            <Col span={4}>
+              <Form.Item name="modeOfTransport" label="Mode Of Transport">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="destination" label="Destination of Supply">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="transportCompany" label="Transport Company">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="roadPermit" label="G.R No. & Date (Road Permit)">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={7}>
+              <Form.Item name="deliveryNote" label="Delivery Note">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={4}>
+              <Form.Item name="deliveryNoteDate" label="Delivery Note Date">
+                <SingleDatePicker
+                  // value={deliveryNoteDate}
+                  setDate={(value) =>
+                    form.setFieldValue("deliveryNoteDate", value)
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="vehicleNo" label="Vehicle Number">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="dispatchDocNo" label="Dispatch Doc. Number">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="termsDelivery" label="Terms Of Delivery">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item name="salesPerson" label="Sales Person">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+      <Divider />
+      <Row gutter={12}>
+        <Col span={4}>
+          <Descriptions size="small" title=" Buyer Details">
+            <Descriptions.Item
+              contentStyle={{
+                fontSize: window.innerWidth < 1600 && "0.7rem",
+              }}
+            >
+              Provide Buyer Details
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+        <Col span={4}>
+          <Form.Item name="buyerOrderNo" label="Buyer's Order Number.">
+            <Input />
+          </Form.Item>
+        </Col>
+        <Col span={4}>
+          <Form.Item name="buyerOrderDate" label="Buyer's Order Date">
+            <SingleDatePicker
+              // value={invoiceDate}
+              setDate={(value) => form.setFieldValue("buyerOrderDate", value)}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={4}>
+          <Form.Item name="modeOfPayment" label="Mode Of Payment">
+            <Input />
+          </Form.Item>
+        </Col>
+        <Col span={4}>
+          <Form.Item name="ponumber" label="Po Number & Date">
+            <Input />
+          </Form.Item>
+        </Col>
+        <Col span={4}>
+          <Form.Item name="otherReferences" label="Other References">
+            <Input />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Divider />
+      <Row>
+        <Col span={4}>
+          <Descriptions size="small" title="Shiping Details">
+            <Descriptions.Item
+              contentStyle={{
+                fontSize: window.innerWidth < 1600 && "0.7rem",
+              }}
+            >
+              <Col span={24}>
+                Same as Billing address{" "}
+                <Switch disabled={!client} onChange={handleToggleCheck} />
+              </Col>
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+
+        <Row gutter={12}>
+          <Col span={4}>
+            <Form.Item
+              name="shippingName"
+              label="Name"
+              rules={[{ required: true, message: "" }]}
+            >
+              <Field
+                attr="required | Name is required"
+                showValidation={isValid}
+              >
+                <Input disabled={toggleCheck} />
+              </Field>
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item
+              name="shippingState"
+              label="State"
+              rules={[{ required: true, message: "" }]}
+            >
+              <MySelect
+                labelInValue
+                disabled={toggleCheck}
+                options={stateOptions}
+                showError={isValid}
+                message="State is required"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item
+              name="shippingCity"
+              label="City"
+              rules={[{ required: true, message: "" }]}
+            >
+              <Field
+                attr="required | City is required"
+                showValidation={isValid}
+              >
+                <Input disabled={toggleCheck} />
+              </Field>
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item
+              name="shippingPin"
+              label="PinCode"
+              rules={[{ required: true, message: "" }]}
+            >
+              <Field
+                attr="required | PinCode is required"
+                showValidation={isValid}
+              >
+                <Input disabled={toggleCheck} />
+              </Field>
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item
+              name="shippingGst"
+              label="GST"
+              rules={[{ required: true, message: "" }]}
+            >
+              <Field
+                attr="required | GST is required"
+                showValidation={isValid}
+              >
+                <Input disabled={toggleCheck} />
+              </Field>
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item
+              name="shippingPan"
+              label="Pan"
+              rules={[{ required: true, message: "" }]}
+            >
+              <Field
+                attr="required | Pan is required"
+                showValidation={isValid}
+              >
+                <Input disabled={toggleCheck} />
+              </Field>
+            </Form.Item>
+          </Col>
+          <Col span={6}>
+            <Form.Item
+              name="shippingAddress"
+              label="Address"
+              rules={[{ required: true, message: "" }]}
+            >
+              <Field
+                attr="required | Address is required"
+                showValidation={isValid}
+              >
+                <Input.TextArea disabled={toggleCheck} />
+              </Field>
+            </Form.Item>
+          </Col>
+        </Row>
+      </Row>
+    </div>
+  );
+};
+
+const rules = {
+  client: [
+    {
+      required: true,
+      message: "",
+    },
+  ],
+  location: [
+    {
+      required: true,
+      message: "",
+    },
+  ],
+};
+export default HeaderDetails;

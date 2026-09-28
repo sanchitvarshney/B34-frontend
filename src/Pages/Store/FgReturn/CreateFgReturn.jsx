@@ -1,0 +1,295 @@
+import { Col, Descriptions, Divider, Form, Input, Row } from "antd";
+import  { useEffect, useState } from "react";
+import NavFooter from "../../../Components/NavFooter";
+import MyAsyncSelect from "../../../Components/MyAsyncSelect";
+import useApi from "../../../hooks/useApi.ts";
+import { getProductsOptions } from "../../../api/general.ts";
+import { imsAxios } from "../../../axiosInterceptor";
+import MySelect from "../../../Components/MySelect";
+import { useToast } from "../../../hooks/useToast.js";
+import Field from "../../../Components/Field.jsx";
+
+function CreateFgReturn() {
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [asyncOptions, setAsyncOptions] = useState([]);
+  const [bomOptions, setBomOptions] = useState([]);
+  const [locationlist, setLocationList] = useState([]);
+  const [isValid, setIsValid] = useState(false);
+  const [fgReturn] = Form.useForm();
+  const sku = Form.useWatch("sku", fgReturn);
+  const selectedStatus = Form.useWatch("status", fgReturn);
+  const statusOptions = [
+    { text: "Okay (Re-usable)", value: "OK" },
+    { text: "NG (damaged)", value: "NG" },
+  ];
+
+  const { executeFun } = useApi();
+
+  const getOption = async (searchInput) => {
+    setAsyncOptions([]);
+    const response = await executeFun(
+      () => getProductsOptions(searchInput, true),
+      "select"
+    );
+    let  data  = response?.data;
+
+    setAsyncOptions(data);
+  };
+  const getExistingDetails = async (sku) => {
+    // setAsyncOptions([]);
+    setLoading("page");
+    const response = await imsAxios.post("/ppr/fetchProductData", {
+      search: sku,
+    });
+    setLoading(false);
+
+    const  data  = response?.data;
+    if (response?.success) {
+      const bomArr = data.bom.map((row) => ({
+        text: row.text,
+        value: row.id,
+      }));
+      fgReturn.setFieldValue("uom", data.other.uom);
+      setBomOptions(bomArr);
+      
+    }
+  }; 
+ 
+  const getLocations = async () => {
+    const response = await imsAxios.get("/ppr/mfg_locations");
+    const arr = [];
+    response.data.map((a) => arr.push({ text: a.text, value: a.id }));
+    setLocationList(arr);
+  };
+  const resetFunction = () => {
+    fgReturn.resetFields();
+    setIsValid(false);
+  };
+  const validateHandler = async () => {
+    let values;
+    try {
+      values = await fgReturn.validateFields();
+    } catch (error) {
+      if (error?.errorFields) {
+        setIsValid(true);
+        return;
+      }
+      showToast(error?.message || "Something went wrong", "error");
+      return;
+    }
+    setIsValid(false);
+
+    let payload = {
+      product_sku: values.sku?.key,
+      bom_id: values.bom?.key,
+      qty_return: values.qty,
+      location_in: values.location,
+      fg_status: values.status,
+      remark: values.remarks,
+    };
+
+    setLoading(true);
+    try {
+      const response = await imsAxios.post("/fg_return/saveFG_return", payload);
+      if (response?.success) {
+        showToast(response?.message, "success");
+        resetFunction();
+      } else {
+        showToast(response?.message, "error");
+      }
+    } catch (error) {
+      showToast(error?.message ?? "Something went wrong", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (sku) {
+      getExistingDetails(sku.value);
+    }
+  }, [sku]);
+  useEffect(() => {
+    if (selectedStatus) {
+      getLocations();
+    }
+  }, [selectedStatus]);
+
+  return (
+    <div style={{ height: "90%", margin:20}}>
+      <Row gutter={10} >
+        <Form form={fgReturn} layout="vertical">
+          <Row>
+            <Col span={6}>
+              <Descriptions size="small" title="FG Details">
+                <Descriptions.Item
+                  contentStyle={{
+                    fontSize: window.innerWidth < 1600 && "0.7rem",
+                  }}
+                >
+                  Enter FG details like SKU and BOM.
+                </Descriptions.Item>
+              </Descriptions>
+            </Col>
+            <Col span={18}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item
+                    label="SKU Code"
+                    name="sku"
+                    rules={[
+                      {
+                        required: true,
+                        message: "",
+                      },
+                    ]}
+                  >
+                    <MyAsyncSelect
+                      loadOptions={getOption}
+                      optionsState={asyncOptions}
+                      onBlur={() => setAsyncOptions([])}
+                      labelInValue
+                      showError={isValid}
+                      message="Please provide the sku"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    name="bom"
+                    label="BOM"
+                    rules={[
+                      {
+                        required: true,
+                        message: "",
+                      },
+                    ]}
+                  >
+                    <MyAsyncSelect
+                      loadOptions={getExistingDetails}
+                      optionsState={bomOptions}
+                      onBlur={() => setAsyncOptions([])}
+                      labelInValue
+                      showError={isValid}
+                      message="Please provide the BOM"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    name="uom"
+                    label="UoM"
+                    rules={[
+                      {
+                        required: true,
+                        message: "",
+                      },
+                    ]}
+                  >
+                    <Field
+                      attr="required | Please provide the UoM"
+                      showValidation={isValid}
+                    >
+                      <Input disabled />
+                    </Field>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+            <Col span={6}>
+              <Descriptions size="small" title="Return Details">
+                <Descriptions.Item
+                  contentStyle={{
+                    fontSize: window.innerWidth < 1600 && "0.7rem",
+                  }}
+                >
+                  Enter Item details like Qty,location and its usage condition.
+                </Descriptions.Item>
+              </Descriptions>
+            </Col>
+            <Col span={18}>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label="Quantity"
+                    name="qty"
+                    rules={[
+                      {
+                        required: true,
+                        message: "",
+                      },
+                    ]}
+                  >
+                    <Field
+                      attr="required | Please provide the Quantity"
+                      showValidation={isValid}
+                      treatZeroAsEmpty
+                    >
+                      <Input type="number" />
+                    </Field>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    name="status"
+                    label="Condition of Item"
+                    rules={[
+                      {
+                        required: true,
+                        message: "",
+                      },
+                    ]}
+                  >
+                    <MySelect
+                      options={statusOptions}
+                      showError={isValid}
+                      message="Please provide the Condition of Item"
+                    />
+                  </Form.Item>
+                </Col>
+                {/* {selectedStatus == "okay" && ( */}
+                <Col span={6}>
+                  <Form.Item
+                    name="location"
+                    label="Location"
+                    // rules={[
+                    //   {
+                    //     required: true,
+                    //     message: "Please provide the Location.",
+                    //   },
+                    // ]}
+                  >
+                    <MyAsyncSelect
+                      disabled={selectedStatus != "okay"}
+                      loadOptions={getLocations}
+                      optionsState={locationlist}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={10}>
+                  {" "}
+                  <Form.Item name="remarks" label="Remarks">
+                    <Input.TextArea rows={3} />
+                  </Form.Item>
+                </Col>
+                {/* )} */}
+              </Row>
+            </Col>
+          </Row>
+        </Form>{" "}
+        <Divider />
+      </Row>
+      <NavFooter
+        resetFunction={resetFunction}
+        submitFunction={validateHandler}
+        nextLabel="Submit"
+        loading={loading}
+      />
+    </div>
+  );
+}
+
+export default CreateFgReturn;

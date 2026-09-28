@@ -1,0 +1,476 @@
+import {  Col, Input, Row, Space } from "antd";
+import { useEffect, useState } from "react";
+import { useToast } from "../../../hooks/useToast.js";
+import { imsAxios } from "../../../axiosInterceptor";
+import { downloadCSV } from "../../../Components/exportToCSV";
+import MyAsyncSelect from "../../../Components/MyAsyncSelect";
+import MyDataTable from "../../../Components/MyDataTable";
+import MyDatePicker from "../../../Components/MyDatePicker";
+import MySelect from "../../../Components/MySelect";
+import printFunction, {
+  downloadFunction,
+} from "../../../Components/printFunction";
+import  {
+  CommonIcons,
+} from "../../../Components/TableActions.jsx/TableActions";
+import ToolTipEllipses from "../../../Components/ToolTipEllipses";
+import JWRMChallanCancel from "./JWRMChallanCancel";
+import JWRMChallanEditAll from "./JWRMChallanEditAll";
+import JWRMChallanEditMaterials from "./JWRMChallanEditMaterials";
+// import EWayBillModal from "./EWayBillModal";
+import { GridActionsCellItem } from "@mui/x-data-grid";
+import { Link } from "react-router-dom";
+import CancelEwayBillModal from "./CancelEwayBillModal";
+import MyButton from "../../../Components/MyButton";
+import Field from "../../../Components/Field.jsx";
+
+function JwRwChallan() {
+  const { showToast } = useToast();
+  const [wise, setWise] = useState("datewise");
+  const [searchInput, setSearchInput] = useState("");
+  const [asyncOptions, setAsyncOptions] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [editingJWMaterials, setEditingJWMaterials] = useState(false);
+  const [editiJWAll, setEditJWAll] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
+  // const [showEwayBillModal, setShowEwayBillModal] = useState(null);
+  const [showEwayBillCancelModal, setShowEwayBillCancelModal] = useState(null);
+  const [isValid, setIsValid] = useState(false);
+
+  const wiseOptions = [
+    { text: "Date Wise", value: "datewise" },
+    { text: "JW Number Wise", value: "jw_transaction_wise" },
+    { text: "Challan Wise", value: "challan_wise" },
+    { text: "SKU Wise", value: "jw_sfg_wise" },
+    { text: "Vendor Wise", value: "vendorwise" },
+    // { text: "Issue Request Date Wise", value: "issuedtwise" },
+  ];
+  const getAsyncOptions = async (search, type) => {
+    let link =
+      type === "sku"
+        ? "/backend/getProductByNameAndNo"
+        : type === "vendor" && "/backend/vendorList";
+    setLoading("select");
+    
+    const response = await imsAxios.post(link, {
+      search: search,
+    });
+    setLoading(false);
+    if (response?.success) {
+      let arr = response?.data.map((row) => ({
+        text: row.text,
+        value: row.id,
+      }));
+      setAsyncOptions(arr);
+    } else {
+      setAsyncOptions([]);
+    }
+  };
+  const getRows = async () => {
+    const searchValue =
+      wise === "jw_sfg_wise" || wise === "vendorwise"
+        ? (searchInput?.value ?? searchInput)
+        : searchInput;
+
+    if (!wise || !searchValue) {
+      setIsValid(true);
+      return;
+    }
+    setIsValid(false);
+
+ try {
+     setLoading("fetch");
+    const response = await imsAxios.post("/jobwork/getJobworkChallan", {
+      data: searchValue,
+      wise: wise,
+    });
+    setLoading(false);
+    if (response.success) {
+      let arr = response.data.map((row, index) => ({
+        id: index + 1,
+        ...row,
+      }));
+      setRows(arr);
+    } else {
+      setRows([]);
+      showToast(response.message?.msg ?? response.message ?? "Something went wrong", "error");
+    }
+  
+ } catch (error) {
+  setLoading(false);
+  showToast(error?.message ?? "Something went wrong", "error");
+  
+ }
+  };
+  const handlePrint = async (challan_id, refId, btn_status, invoice_id) => {
+    setLoading("print");
+    let link =
+      btn_status === "false"
+        ? "/jobwork/print_jw_rm_issue"
+        : "/jobwork/printJobworkChallan";
+    const response = await imsAxios.post(link, {
+      invoice_id: invoice_id,
+      ref_id: refId,
+      challan: challan_id,
+    });
+
+    console.log(response,"response")
+    setLoading(false);
+    if (response.success) {
+      printFunction(response.data.buffer?.data);
+    } else {
+      showToast(response.message?.msg || response.message, "error");
+    }
+  };
+  const handleDownload = async (challan_id, refId, btn_status, invoice_id) => {
+    setLoading("print");
+    let link =
+      btn_status === "false"
+        ? "/jobwork/print_jw_rm_issue"
+        : "/jobwork/printJobworkChallan";
+    const response = await imsAxios.post(link, {
+      invoice_id: invoice_id,
+      ref_id: refId,
+      challan: challan_id,
+    });
+    setLoading(false);
+    if (response.success) {
+      downloadFunction(response.data.buffer?.data, response.data.filename);
+    } else {
+      showToast(response.message?.msg || response.message, "error");
+    }
+  };
+
+  // const handleEwayBillPrint = async () => {
+  //   try {
+  //     setLoading("print");
+  //     const response = await imsAxios.post("");
+  //   } catch (error) {
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const columns = [
+    {
+      field: "actions",
+      headerName: "",
+      width: 30,
+      // flex: 1,
+      type: "actions",
+      getActions: ({ row }) => [
+        // Download icon
+        <GridActionsCellItem
+          key="download"
+          showInMenu
+          // disabled={disabled}
+          label={"Download"}
+          onClick={() =>
+            handleDownload(
+              row.challan_id,
+              row.issue_transaction_id,
+              row.status,
+              row.jw_transaction_id
+            )
+          }
+        />,
+        <GridActionsCellItem
+          key="print"
+          showInMenu
+          // disabled={disabled}
+          label="Print"
+          onClick={() =>
+            handlePrint(
+              row.challan_id,
+              row.issue_transaction_id,
+              row.status,
+              row.jw_transaction_id
+            )
+          }
+        />,
+        <GridActionsCellItem
+          key="edit"
+          showInMenu
+          disabled={row.status === "cancel"}
+          label={row.status === "create" ? "Create" : "Edit"}
+          onClick={() => {
+            row.status === "create"
+              ? setEditJWAll({
+                  sku: row.sku_code,
+                  fetchTransactionId: row.issue_transaction_id,
+                  saveTransactionId: row.jw_transaction_id,
+                })
+              : row.status === "edit" && setEditingJWMaterials(row.challan_id);
+          }}
+        />,
+        <GridActionsCellItem
+          key="cancel"
+          showInMenu
+          disabled={row.status === "create" ? false : true}
+          label="Cancel"
+          onClick={() =>
+            setShowCancel({
+              poId: row.jw_transaction_id,
+              challanId: row.challan_id,
+            })
+          }
+        />,
+        row.jw_ewaybill_status === "--" ||
+        row.jw_ewaybill_status === "CANCELLED" ? (
+          <GridActionsCellItem
+            showInMenu
+            label={
+              <Link
+                style={{ textDecoration: "none", color: "black" }}
+                to={`/warehouse/e-way/jw/${row.challan_id.replaceAll(
+                  "/",
+                  "_"
+                )}`}
+                target="_blank"
+              >
+                Create E-Way Bill
+              </Link>
+            }
+          />
+        ) : (
+          <GridActionsCellItem
+            showInMenu
+            label="Cancel E-Way Bill"
+            onClick={() =>
+              setShowEwayBillCancelModal({
+                jwId: row.challan_id,
+                eWayBill: row.jw_ewaybill,
+              })
+            }
+          />
+        ),
+      ],
+    },
+    { headerName: "#", width: 30, field: "id" },
+
+    {
+      headerName: "Req. Date",
+      field: "issue_challan_rm_dt",
+      width: 190,
+      renderCell: ({ row }) => (
+        <ToolTipEllipses text={row.issue_challan_rm_dt} />
+      ),
+    },
+    {
+      headerName: "Vendor",
+      field: "vendor",
+      width: 190,
+      renderCell: ({ row }) => <ToolTipEllipses text={row.vendor} />,
+    },
+    {
+      headerName: "Issue Ref ID",
+      width: 100,
+      field: "issue_transaction_id",
+      renderCell: ({ row }) => (
+        <ToolTipEllipses text={row.issue_transaction_id} />
+      ),
+    },
+    {
+      headerName: "Jobwork Id",
+      width: 200,
+      field: "jw_transaction_id",
+      renderCell: ({ row }) => (
+        <ToolTipEllipses text={row.jw_transaction_id} copy={true} />
+      ),
+    },
+    {
+      headerName: "Challan ID",
+      width: 190,
+      field: "challan_id",
+      renderCell: ({ row }) => (
+        <ToolTipEllipses text={row.challan_id} copy={true} />
+      ),
+    },
+    {
+      headerName: "Status",
+      width: 120,
+      field: "status",
+      renderCell: ({ row }) => (
+        <span>{row.status === "cancel" ? "Cancelled" : "--"}</span>
+      ),
+    },
+    {
+      headerName: "Eway Bill Status",
+      width: 120,
+      field: "jw_ewaybill_status",
+    },
+      {
+        headerName: "Eway Bill",
+        width: 150,
+        field: "jw_ewaybill",
+        renderCell: ({ row }) => (
+          <ToolTipEllipses text={row.jw_ewaybill} copy={row.jw_ewaybill!=="--"?true:false} />
+        ),
+      },
+    {
+      headerName: "SKU ID",
+      width: 100,
+      field: "sku_code",
+      renderCell: ({ row }) => (
+        <ToolTipEllipses text={row.sku_code} copy={true} />
+      ),
+    },
+    {
+      headerName: "Product",
+      width: 200,
+      field: "jw_sku_name",
+      renderCell: ({ row }) => <ToolTipEllipses text={row.jw_sku_name} />,
+    },
+  ];
+  useEffect(() => {
+    setSearchInput("");
+    setIsValid(false);
+  }, [wise]);
+  return (
+    <div style={{ height: "100%", padding:10 }}>
+      <JWRMChallanEditMaterials
+        editingJWMaterials={editingJWMaterials}
+        setEditingJWMaterials={setEditingJWMaterials}
+        getRows={getRows}
+      />
+      <JWRMChallanEditAll
+        getRows={getRows}
+        editiJWAll={editiJWAll}
+        setEditJWAll={setEditJWAll}
+      />
+      <JWRMChallanCancel
+        showCancel={showCancel}
+        setShowCancel={setShowCancel}
+      />
+      <CancelEwayBillModal
+        show={showEwayBillCancelModal}
+        hide={() => setShowEwayBillCancelModal(null)}
+      />
+      <Row
+        justify="space-between"
+      >
+        {/* <EWayBillModal
+          show={showEwayBillModal}
+          hide={() => setShowEwayBillModal(null)}
+        /> */}
+        <Col>
+          <Space>
+            <div style={{ width: 150 }}>
+              <MySelect
+                options={wiseOptions}
+                onChange={setWise}
+                value={wise}
+                setSearchString={setSearchInput}
+                showError={isValid}
+                message="Please select wise"
+              />
+            </div>
+            <div style={{ width: 300 }}>
+              {wise === "datewise" && (
+                <MyDatePicker
+                  size="default"
+                  setDateRange={setSearchInput}
+                  dateRange={searchInput}
+                  value={searchInput}
+                  spacedFormat={true}
+                  showError={isValid}
+                  message="Please select a date range"
+                />
+              )}
+              {wise === "jw_transaction_wise" && (
+                <Field
+                  attr="required | Please enter a JW Number"
+                  value={searchInput}
+                  showValidation={isValid}
+                >
+                  <Input
+                    size="default"
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    value={searchInput}
+                  />
+                </Field>
+              )}
+              {wise === "challan_wise" && (
+                <Field
+                  attr="required | Please enter a Challan ID"
+                  value={searchInput}
+                  showValidation={isValid}
+                >
+                  <Input
+                    size="default"
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    value={searchInput}
+                  />
+                </Field>
+              )}
+              {wise === "jw_sfg_wise" && (
+                <MyAsyncSelect
+                  onBlur={() => setAsyncOptions([])}
+                  value={searchInput}
+                  optionsState={asyncOptions}
+                  selectLoading={loading === "select"}
+                  onChange={(value) => setSearchInput(value)}
+                  loadOptions={(value) => getAsyncOptions(value, "sku")}
+                  labelInValue
+                  showError={isValid}
+                  message="Please select a SKU"
+                />
+              )}
+              {wise === "vendorwise" && (
+                <MyAsyncSelect
+                  onBlur={() => setAsyncOptions([])}
+                  value={searchInput}
+                  optionsState={asyncOptions}
+                  selectLoading={loading === "select"}
+                  onChange={(value) => setSearchInput(value)}
+                  loadOptions={(value) => getAsyncOptions(value, "vendor")}
+                  labelInValue
+                  showError={isValid}
+                  message="Please select a vendor"
+                />
+              )}
+              {wise === "issuedtwise" && (
+                <MyDatePicker
+                  size="default"
+                  setDateRange={setSearchInput}
+                  dateRange={searchInput}
+                  value={searchInput}
+                  showError={isValid}
+                  message="Please select a date range"
+                />
+              )}
+            </div>
+            <MyButton
+              variant="search"
+              type="primary"
+              loading={loading === "fetch"}
+              onClick={getRows}
+              id="submit"
+            >
+              Search
+            </MyButton>
+          </Space>
+        </Col>
+        <Col>
+          <Space>
+            <CommonIcons
+              action="downloadButton"
+              onClick={() => downloadCSV(rows, columns, "JW RM Challan Report")}
+              disabled={rows.length == 0}
+            />
+          </Space>
+        </Col>
+      </Row>
+      <div style={{ height: "92%", marginTop: "10px" }}>
+        <MyDataTable
+          loading={loading === "fetch" || loading === "print"}
+          columns={columns}
+          rows={rows}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default JwRwChallan;

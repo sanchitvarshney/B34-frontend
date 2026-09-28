@@ -1,0 +1,84 @@
+import { useEffect } from "react";
+import dayjs from "dayjs";
+import { DatePicker } from "antd";
+
+export default function SingleDatePicker({
+  setDate,
+  placeholder,
+  size,
+  daysAgo,
+  row,
+  value,
+  inputHandler,
+  tablePicker,
+  name,
+  disabled,
+  legal,
+  format = "DD-MM-YYYY",
+  pickerType,
+  showError=false,
+  message="Please Select Date"
+}) {
+  const onChange = (date, dateString) => {
+    if (tablePicker) {
+      inputHandler(name, dateString, row.id);
+      return;
+    }
+
+    if (!pickerType && setDate) {
+      setDate(dateString);
+    }
+    if (pickerType && setDate) {
+      setDate(date);
+    }
+  };
+
+  const disabledDate = (current) => {
+    if (legal) {
+      return;
+    } else {
+      return current && current > dayjs().endOf("day");
+    }
+  };
+  useEffect(() => {
+    if (setDate) {
+      if (daysAgo) {
+        setDate(
+          daysAgo &&
+            dayjs()
+              .subtract(daysAgo, "d")
+              .format(format ?? format)
+        );
+      } else {
+        setDate(value);
+      }
+    }
+  }, []);
+
+    const isEmpty = value === undefined || value === null || value === "" || !value;
+  const showValidation = showError  && isEmpty;
+
+  return (
+     <div style={{ position: "relative" , width: "100%"}}>
+    <DatePicker
+      disabled={disabled}
+      disabledDate={disabledDate}
+      size={size ?? "default"}
+      picker={pickerType}
+      style={{ width: "100%", height: "100%" }}
+      format={format && !pickerType ? format : undefined}
+      value={
+        daysAgo
+          ? dayjs().subtract(daysAgo, "d")
+          : // : value && dayjs(value, format)
+          value && !pickerType
+          ? value && dayjs(value, format)
+          : value && dayjs(value)
+      }
+      onChange={onChange}
+      placeholder={placeholder && placeholder}
+    />
+          {showValidation && <span className="field-validation-tooltip">{message}</span>}
+ </div>
+  );
+}

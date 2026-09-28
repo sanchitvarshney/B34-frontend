@@ -1,0 +1,57 @@
+import { Card, Form, Input, Col } from "antd";
+import MySelect from "../../../../Components/MySelect";
+import Field from "../../../../Components/Field.jsx";
+
+const BillingDetailsCard = ({ form, setaddid, addoptions, isValid }) => {
+
+  const handleaddress = (e) => {
+    setaddid(true);
+    addoptions.map((item) => {
+      if (item.value === e) {
+        form.setFieldValue("billingaddress", item.address);
+      }
+    });
+  };
+  return (
+    <Col span={24}>
+      <Card
+        size="small"
+        title="Billing Details"
+        style={{ height: "100%", overflow: "hidden" }}
+        bodyStyle={{ overflow: "auto", height: "98%" }}
+      >
+        <Form.Item
+          name="billingid"
+          label="Select billing Address"
+          rules={[{ required: true, message: "" }]}
+        >
+          <Field
+            attr="required | Please select billing Address!"
+            showValidation={isValid}
+          >
+            <MySelect
+              options={addoptions}
+              onChange={(e) => {
+                handleaddress(e);
+              }}
+            />
+          </Field>
+        </Form.Item>
+        <Form.Item
+          name="billingaddress"
+          label="Complete Address"
+          rules={[{ required: true, message: "" }]}
+        >
+          <Field
+            attr="required | Please enter Complete Address"
+            showValidation={isValid}
+          >
+            <Input.TextArea rows={3} />
+          </Field>
+        </Form.Item>
+      </Card>
+    </Col>
+  );
+};
+
+export default BillingDetailsCard;

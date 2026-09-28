@@ -1,0 +1,235 @@
+import { useEffect, useState } from "react";
+import { imsAxios } from "../../../../axiosInterceptor";
+import { useToast } from "../../../../hooks/useToast.js";
+import { Row, Col, Input, Button } from "antd";
+import MyDataTable from "../../../../Components/MyDataTable";
+import printFunction, {
+  downloadFunction,
+} from "../../../../Components/printFunction";
+import RequestApproveModal from "./RequestApproveModal";
+import { Form, Modal } from "antd/es";
+import Field from "../../../../Components/Field";
+import {
+  ExclamationCircleOutlined,
+  CloseOutlined,
+  SaveOutlined,
+} from "@ant-design/icons";
+
+import { PrinterOutlined } from "@ant-design/icons";
+import Loading from "../../../../Components/Loading.jsx";
+const PendingApproval = () => {
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState("fetch");
+  const [rows, setRows] = useState([]);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [ModalForm] = Form.useForm();
+  const getRows = async () => {
+    try {
+      setRows([]);
+      const payload = {
+        branch: "BRALWR34",
+        status: "",
+      };
+      const response = await imsAxios.post(
+        "storeApproval/fetchTransactionForApproval",
+        payload,
+      );
+      const data = response?.data;
+
+      if (response.success) {
+        const arr = data.map((row, index) => ({
+          id: index + 1,
+          requestedFrom: row.user_name,
+          requestId: row.transaction_id,
+          requestDate: row.insert_full_date,
+        }));
+
+        setRows(arr);
+      } else {
+        showToast(response.message, "error");
+      }
+    } catch (error) {
+      showToast(error?.message || "Something went wrong", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderCancelModalContent = (showValidation) => (
+    <Form form={ModalForm}>
+      <Form.Item name="remark" rules={[{ required: true, message: "" }]}>
+        <Field
+          attr="required | Please input the remark"
+          showValidation={showValidation}
+        >
+          <Input placeholder="Please input the remark" />
+        </Field>
+      </Form.Item>
+    </Form>
+  );
+  const showSubmitConfirmationModal = (type) => {
+    // submit confirm modal
+    const modalInstance = Modal.confirm({
+      title: "Do you Want to Cancel the Material Requisition?",
+      icon: <ExclamationCircleOutlined />,
+      content: renderCancelModalContent(false),
+      okText: "Yes",
+      cancelText: "No",
+      onOk: async () => {
+        let values;
+        try {
+          values = await ModalForm.validateFields();
+        } catch (error) {
+          modalInstance.update({ content: renderCancelModalContent(true) });
+          return Promise.reject(error);
+        }
+        await cancelmr(type, values);
+      },
+    });
+  };
+  const cancelmr = async (type, values) => {
+    const response = await imsAxios.post("/storeApproval/requestCancellation", {
+      transaction: type.requestId,
+      remark: values.remark,
+    });
+    if (response.success) {
+      showToast(response.message, "success");
+      ModalForm.resetFields();
+    } else {
+      showToast(response.message, "error");
+    }
+  };
+
+  const columns = [
+    {
+      headerName: "#",
+      minWidth: 80,
+      maxWidth: 80,
+      field: "id",
+    },
+    {
+      headerName: "Requested From",
+      // flex: 1,
+      width: 400,
+      field: "requestedFrom",
+    },
+    {
+      headerName: "Request Id",
+      width: 400,
+      maxWidth: 400,
+      field: "requestId",
+    },
+    {
+      headerName: "Request Date",
+      width: 400,
+      maxWidth: 400,
+      field: "requestDate",
+    },
+    {
+      headerName: "Action",
+      type: "actions",
+      pin: "right",
+      width: 300,
+      maxWidth: 300,
+      renderCell: (params) => {
+        return (
+          <div style={{ display: "flex", gap: 10 }}>
+            <Button
+              onClick={() =>
+                setShowApproveModal({
+                  requestId: params.row.requestId,
+                })
+              }
+              style={{
+                background: "#fffdef",
+                borderColor: "#3f3e3e",
+                color: "#272727",
+              }}
+              icon={<SaveOutlined />}
+              size="small"
+            >
+              Process
+            </Button>
+            <Button
+              onClick={() => showSubmitConfirmationModal(params.row)}
+              icon={<CloseOutlined />}
+              size="small"
+              style={{
+                background: "#ffffff",
+                borderColor: "#ff8484",
+                color: "#f76565",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleDownload("print", params.row.requestId)}
+              size="small"
+              style={{
+                background: "#e6f4ff",
+                borderColor: "#91caff",
+                color: "#0958d9",
+              }}
+              icon={<PrinterOutlined />}
+            />
+            {/* <MyButton
+            onClick={() =>
+              handleDownload("download", params.row.requestId)
+            }
+            type="primary"
+            variant="download"
+            size="small"
+         /> */}
+          </div>
+        );
+      },
+    },
+  ];
+  const handleDownload = async (action, requestId) => {
+    try {
+      setLoading("download");
+      const response = await imsAxios.post("/storeApproval/print_request", {
+        transaction: requestId,
+      });
+
+      const { data, success } = response;
+
+      if (success) {
+        const buffer = data.buffer.data;
+        if (action === "print") {
+          printFunction(buffer);
+        } else {
+          downloadFunction(buffer, requestId);
+        }
+      } else {
+        showToast(response.message?.msg ?? response.message, "error");
+      }
+    } catch (error) {
+      showToast(error?.message || "Something went wrong", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getRows();
+  }, []);
+  return (
+    <Row style={{ height: "100%", padding: 15 }}>
+      {loading === "download" && <Loading />}
+      <Col span={24}>
+        <MyDataTable
+          loading={loading === "fetch"}
+          data={rows}
+          columns={columns}
+        />
+      </Col>
+      <RequestApproveModal
+        getRows={getRows}
+        show={showApproveModal}
+        hide={() => setShowApproveModal(false)}
+      />
+    </Row>
+  );
+};
+
+export default PendingApproval;
