@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "../../../../hooks/useToast.js";
 import {
   Button,
@@ -9,7 +9,6 @@ import {
   Divider,
   Drawer,
   Space,
-  InputNumber,
   Popconfirm,
 } from "antd";
 import MyAsyncSelect from "../../../../Components/MyAsyncSelect";
@@ -38,7 +37,6 @@ const AddClientModal = ({ setOpen, open }) => {
   const [asyncOptions, setAsyncOptions] = useState([]);
   const [selectLoading, setSelectLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [files, setFiles] = useState([]);
 
   const [addClientForm] = Form.useForm();
 
@@ -62,7 +60,7 @@ const AddClientModal = ({ setOpen, open }) => {
       });
       setSelectLoading(false);
       let arr = [];
-      arr = data.map((d) => {
+      arr = response?.data.map((d) => {
         return { text: d.text, value: d.id };
       });
       setAsyncOptions(arr);
@@ -72,30 +70,30 @@ const AddClientModal = ({ setOpen, open }) => {
   const addClientDetail = async () => {
     const values = await addClientForm.validateFields();
     let obj = {
-      "clientName": values.clientName ,
-      "panNo": values.pan,
-      "mobileNo": values.mobile,
-      "state": values.state,
-      "address": values.address,
-      "city": values.city,
-      "pinCode": values.pin,
-      "phoneNo": values.phoneno,
-      "gst": values.gst,
+      clientName: values.clientName,
+      panNo: values.pan,
+      mobileNo: values.mobile,
+      state: values.state,
+      address: values.address,
+      city: values.city,
+      pinCode: values.pin,
+      phoneNo: values.phoneno,
+      gst: values.gst,
     };
     try {
-    setSubmitLoading(true);
-    const response = await imsAxios.post("client/addclient", obj);
-    if (response.success) {
-      // fetchVendor();
-      reset()
-      showToast(response.message, "success");
-      setOpen(null);
-      // setShowAddVendorModal(false);
-    } else {
-      showToast(response.message?.msg || response.message, "error");
-    }
+      setSubmitLoading(true);
+      const response = await imsAxios.post("client/add", obj);
+      if (response.success) {
+        // fetchVendor();
+        reset();
+        showToast(response.message, "success");
+        setOpen(null);
+        // setShowAddVendorModal(false);
+      } else {
+        showToast(response.message?.msg || response.message, "error");
+      }
     } catch (error) {
-    showToast(error, "error")
+      showToast(error, "error");
     } finally {
       setSubmitLoading(false);
     }
@@ -106,16 +104,16 @@ const AddClientModal = ({ setOpen, open }) => {
     // formData.append("uploadfile", files[0]);
     // setSubmitLoading(true);
     // const response = await imsAxios.post("client/addclient", obj);
-  //   setSubmitLoading(false);
-  //   if (response.success) {
-  //     // fetchVendor();
-  //     reset()
-  //     toast.success(data.message.toString().replaceAll("<br/>", " "));
-  //     setOpen(null);
-  //     // setShowAddVendorModal(false);
-  //   } else {
-  //     toast.error(response.message?.msg || response.message);
-  //   }
+    //   setSubmitLoading(false);
+    //   if (response.success) {
+    //     // fetchVendor();
+    //     reset()
+    //     toast.success(data.message.toString().replaceAll("<br/>", " "));
+    //     setOpen(null);
+    //     // setShowAddVendorModal(false);
+    //   } else {
+    //     toast.error(response.message?.msg || response.message);
+    //   }
   };
 
   const reset = () => {
@@ -133,11 +131,10 @@ const AddClientModal = ({ setOpen, open }) => {
       mobile: "",
       email: "",
       gst: "",
-      phoneno:'',
+      phoneno: "",
     };
 
     addClientForm.setFieldsValue(obj);
-    setFiles([]);
   };
 
   useEffect(() => {
