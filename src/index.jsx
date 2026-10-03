@@ -24,9 +24,9 @@ import { ToastContext } from "./context/ToastContext";
 
 const theme = {
   token: {
-    colorPrimary: "#203624",
-    colorInfo: "#203624",
-    colorSuccess: "#203624",
+    colorPrimary: "#1c3440",
+    colorInfo: "#1c3440",
+    colorSuccess: "#1c3440",
     fontSizeHeading5: 16,
     // colorTextLightSolid: "#12120E",
   },
@@ -34,19 +34,19 @@ const theme = {
     Button: {
       colorText: "#fff",
       colorPrimary: customColor.btnColor,
-      colorPrimaryHover: "#0d9489cd",
-      colorPrimaryActive: "#0d9489",
+      colorPrimaryHover: "#0e7490cd",
+      colorPrimaryActive: "#0e7490",
       primaryColor: "#fff",
       // defaultBg: "",
       defaultColor: "#000",
-      // defaultHoverBg: "#0d9489",
-      // defaultActiveBg: "#0d9489",
+      // defaultHoverBg: "#0e7490",
+      // defaultActiveBg: "#0e7490",
       fontWeight: 550,
     },
     Tabs: {
       colorText: "#12120E",
-      itemSelectedColor: "#203624",
-      inkBarColor: "#203624",
+      itemSelectedColor: "#1c3440",
+      inkBarColor: "#1c3440",
     },
     Divider: {
       verticalMarginInline: 4,
@@ -82,7 +82,7 @@ const theme = {
       margin: 4,
     },
     Tooltip: {
-      colorBgSpotlight: "#0d9489",
+      colorBgSpotlight: "#0e7490",
       colorTextLightSolid: "#fff",
     },
     Card: {
@@ -91,9 +91,9 @@ const theme = {
       colorBgContainer: "#f5f5f2",
     },
     DatePicker: {
-      cellHoverBg: "#d2f571",
-      cellActiveWithRangeBg: "rgba(210, 245, 113, 0.3)",
-      cellHoverWithRangeBg: "rgba(210, 245, 113, 0.3)",
+      cellHoverBg: "#b9eef5",
+      cellActiveWithRangeBg: "rgba(185, 238, 245, 0.3)",
+      cellHoverWithRangeBg: "rgba(185, 238, 245, 0.3)",
       presetsWidth: 120,
     },
   },

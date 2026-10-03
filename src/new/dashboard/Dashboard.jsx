@@ -47,7 +47,7 @@ const CHART_COLORS = [
   "#10B981",
   "#3B82F6",
   "#F97316",
-  "#14B8A6",
+  "#06b6d4",
 ];
 
 const Dashboard = () => {
