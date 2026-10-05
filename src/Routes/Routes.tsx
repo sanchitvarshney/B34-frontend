@@ -229,6 +229,8 @@ import Pending from "../Pages/SFTransfer/Pending.jsx";
 import Addparty from "../Pages/Legal/master/Addparty.jsx";
 //@ts-ignore
 import R38 from "@/Pages/Reports/R/R38.jsx";
+//@ts-ignore
+import R39 from "@/Pages/Reports/R/R39.jsx";
 import WoReport from "../Pages/Workorder/WoReport.jsx";
 import RnC from "../Pages/Legal/Registration&Certificates/RnC.jsx";
 import ViewRnC from "../Pages/Legal/Registration&Certificates/ViewRnC.jsx";
@@ -445,12 +447,12 @@ const Routes = [
     exact: true,
     main: () => <RmtoRm />,
   },
-    {
+  {
     path: "/warehouse/material-transfer/fg-to-fg",
     exact: true,
     main: () => <FGToFGTransfer />,
   },
-    {
+  {
     path: "/warehouse/material-transfer/fg-to-fg/view-transaction",
     exact: true,
     main: () => <FGToFGViewTransaction />,
@@ -602,7 +604,7 @@ const Routes = [
     exact: true,
     main: () => <CreatePhysical />,
   },
-   {
+  {
     path: "/masters/cost-center",
     exact: true,
     main: () => <AddCostCenter />,
@@ -818,6 +820,10 @@ const Routes = [
     path: "/fg-register-report",
 
     main: () => <R38 />,
+  },
+  {
+    path: "/r39",
+    main: () => <R39 />,
   },
   {
     path: "/material-requisition/with-bom",
@@ -1364,7 +1370,7 @@ const Routes = [
     path: "/mes/process/map",
     main: () => <MapProcesses />,
   },
-   {
+  {
     path: "/warehouse/print-view-fg-min",
     main: () => <ViewFGMIN />,
   },
