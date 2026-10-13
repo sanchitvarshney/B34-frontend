@@ -31,8 +31,8 @@ const MyButton = (props) => {
         icon={<SyncOutlined />}
         className={`reset-button ${props.className || ""}`}
         style={{ 
-          backgroundColor: "#0e7490", 
-          borderColor: "#0e7490", 
+          backgroundColor: "#184554", 
+          borderColor: "#184554", 
           color: "#fff",
           ...props.style 
         }}

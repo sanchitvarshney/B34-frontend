@@ -758,7 +758,7 @@ const SidebarInner = ({
                       boxShadow: "none",
                     }
                   : {
-                      backgroundColor: "#0e7490",
+                      backgroundColor: "#184554",
                       border: "none",
                       color: "white",
                       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -767,7 +767,7 @@ const SidebarInner = ({
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.05)";
                 if (!showSideBar) {
-                  e.currentTarget.style.backgroundColor = "#155e75";
+                  e.currentTarget.style.backgroundColor = "#133845";
                 } else {
                   e.currentTarget.style.backgroundColor = "#e0e0e0";
                 }
@@ -775,7 +775,7 @@ const SidebarInner = ({
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
                 if (!showSideBar) {
-                  e.currentTarget.style.backgroundColor = "#0e7490";
+                  e.currentTarget.style.backgroundColor = "#184554";
                 } else {
                   e.currentTarget.style.backgroundColor = isFirstSidebarPin
                     ? "orange"
@@ -801,7 +801,7 @@ const SidebarInner = ({
               right: "12px",
               width: "32px",
               height: "32px",
-              backgroundColor: "#0e7490",
+              backgroundColor: "#184554",
               border: "none",
               borderRadius: "6px",
               cursor: "pointer",
@@ -816,11 +816,11 @@ const SidebarInner = ({
               zIndex: 101,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#155e75";
+              e.currentTarget.style.backgroundColor = "#133845";
               e.currentTarget.style.transform = "scale(1.05)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#155e75";
+              e.currentTarget.style.backgroundColor = "#184554";
               e.currentTarget.style.transform = "scale(1)";
             }}
             title={showSideBar ? "Collapse sidebar" : "Expand sidebar"}
@@ -1011,7 +1011,7 @@ const SidebarInner = ({
                 right: "16px",
                 width: "32px",
                 height: "32px",
-                backgroundColor: "#0e7490",
+                backgroundColor: "#184554",
                 border: "none",
                 borderRadius: "6px",
                 cursor: "pointer",
@@ -1026,11 +1026,11 @@ const SidebarInner = ({
                 zIndex: 101,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#155e75";
+                e.currentTarget.style.backgroundColor = "#133845";
                 e.currentTarget.style.transform = "scale(1.05)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#155e75";
+                e.currentTarget.style.backgroundColor = "#184554";
                 e.currentTarget.style.transform = "scale(1)";
               }}
               title={

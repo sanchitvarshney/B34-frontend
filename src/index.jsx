@@ -33,9 +33,9 @@ const theme = {
   components: {
     Button: {
       colorText: "#fff",
-      colorPrimary: customColor.btnColor,
-      colorPrimaryHover: "#0e7490cd",
-      colorPrimaryActive: "#0e7490",
+      colorPrimary: "#184554",
+      colorPrimaryHover: "#184554cd",
+      colorPrimaryActive: "#184554",
       primaryColor: "#fff",
       // defaultBg: "",
       defaultColor: "#000",
