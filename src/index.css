@@ -150,8 +150,8 @@ button:disabled {
 
 .ant-btn-primary {
   color: #fff !important;
-  background-color: #0e7490 !important;
-  border-color: #0e7490 !important;
+  background-color: #184554 !important;
+  border-color: #184554 !important;
   font-weight: 700 !important;
   letter-spacing: 0.075rem !important;
   border-radius: 0 !important;
@@ -181,7 +181,7 @@ button:disabled {
 }
 .ant-btn-text:hover,
 .ant-btn-text:focus {
-  background-color: #0e7490cb !important;
+  background-color: #184554cb !important;
 }
 .ant-btn-dashed {
   background-color: red !important;
@@ -190,8 +190,8 @@ button:disabled {
 }
 .ant-btn-dashed:hover,
 .ant-btn-dashed:focus {
-  background-color: #0e7490 !important;
-  border-color: #0e7490 !important;
+  background-color: #184554 !important;
+  border-color: #184554 !important;
 }
 .ant-btn {
   box-shadow: none !important;
@@ -201,31 +201,31 @@ button:disabled {
 .ant-btn:focus {
   box-shadow: none !important;
 }
-/* Button hover/focus/active state - change from #0e7490 to #bde649 */
+/* Button hover/focus/active state */
 .ant-btn-primary:hover,
 .ant-btn-primary:focus,
 .ant-btn-primary:active {
-  background-color: #0e7490cb !important;
-  border-color: #0e7490cd !important;
+  background-color: #184554cb !important;
+  border-color: #184554cd !important;
   color: #fff !important;
 }
 /* Reset button styling */
 .reset-button {
-  background-color: #0e7490 !important;
-  border-color: #0e7490 !important;
+  background-color: #184554 !important;
+  border-color: #184554 !important;
   color: #fff !important;
 }
 .reset-button:hover,
 .reset-button:focus,
 .reset-button:active {
-  background-color: #0e7490cb !important;
-  border-color: #0e7490cd !important;
+  background-color: #184554cb !important;
+  border-color: #184554cd !important;
   color: #fff !important;
 }
 
 /* Tooltip styling */
 .ant-tooltip .ant-tooltip-inner {
-  background-color: #0e7490 !important;
+  background-color: #184554 !important;
   color: #fff !important;
   text-decoration: none !important;
 }
@@ -234,7 +234,14 @@ button:disabled {
   text-decoration: none !important;
 }
 .ant-tooltip .ant-tooltip-arrow::before {
-  background-color: #0e7490 !important;
+  background-color: #184554 !important;
+}
+.MuiTooltip-tooltip {
+  background-color: #184554 !important;
+  color: #fff !important;
+}
+.MuiTooltip-arrow {
+  color: #184554 !important;
 }
 /* Tab text bold */
 .ant-tabs-tab-btn {
