@@ -789,7 +789,7 @@ const App = () => {
             <AppHeader
               onToggleSidebar={() => setShowSideBar((open) => !open)}
               // logo={<Logo />}
-              title="IMS (B-34)"
+              title="B-34 IMS"
               branchOptions={options}
               sessionOptions={sessionOptions}
               branchValue={user.company_branch}
